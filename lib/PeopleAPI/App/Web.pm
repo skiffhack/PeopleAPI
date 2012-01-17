@@ -1,4 +1,4 @@
-package PeopleAPI;
+package PeopleAPI::App::Web;
 
 use v5.14.0;
 use Web::Simple;
@@ -16,7 +16,7 @@ sub dispatch_request {
   }
 }
 
-sub get_hosts {
+sub get_hosts_arp {
   my @alive;
   for my $cd (2..254) {
     my $p = Net::Ping->new('syn');
