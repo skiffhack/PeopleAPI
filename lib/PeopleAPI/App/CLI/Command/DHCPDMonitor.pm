@@ -1,6 +1,7 @@
 package PeopleAPI::App::CLI::Command::DHCPDMonitor;
 
 use Moo;
+use v5.14.1;
 use PeopleAPI::App::CLI -command;
 use POE;
 use POE::Component::DHCP::Monitor;
@@ -14,13 +15,14 @@ $|=1;
 my $script = PeopleAPI::Database::Script->new;
 my $schema = $script->schema->clone;
 
-
 sub execute {
   my ($self, $opt, $args) = @_;
 
   POE::Session->create(
     inline_states => {
-      _start              => \&_start,
+      _start => \&_start,
+      dhcp_monitor_sockbinderr 
+        => sub {warn "Couldn't bind to port: Ensure you are running as root."},
       dhcp_monitor_packet => \&dhcp_monitor_packet,
     },
   );
@@ -30,15 +32,15 @@ sub execute {
 sub _start {
   my ($kernel,$heap) = @_[KERNEL,HEAP];
   $heap->{monitor} = 
-  POE::Component::DHCP::Monitor->spawn(
-    alias => 'monitor'
-  );
+    POE::Component::DHCP::Monitor->spawn( alias => 'monitor' );
+  say "Listening.";
   return;
 }
 
 sub dhcp_monitor_packet {
   my ($kernel,$heap,$packet) = @_[KERNEL,HEAP,ARG0];
   foreach my $key (@{$packet->{options_order}}) {
+    say "Got " . $REV_BOOTP_CODES{ $packet->op() };
     if($REV_DHO_CODES{$key} eq 'DHO_HOST_NAME') {
       my $upd = {
         ip => $packet->ciaddr(),
