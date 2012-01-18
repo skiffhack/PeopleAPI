@@ -20,7 +20,7 @@ sub BUILD {
   my $backup_uid = `whoami`; chomp $backup_uid;
   my $username = $ENV{USER} || getpwuid($<);
   my $cfg = Config::Any->load_stems(
-    { stems => [ "etc/conf/peopleapi_${username}" ], use_ext => '1' },
+    { stems => [ "etc/conf/peopleapi" ], use_ext => '1' },
   );
   my %db_info = (
     (map { %{$_->{'Model::Database'}->{'connect_info'}} }

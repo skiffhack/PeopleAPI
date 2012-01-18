@@ -14,6 +14,7 @@ $|=1;
 
 my $script = PeopleAPI::Database::Script->new;
 my $schema = $script->schema->clone;
+my $machines = $schema->resultset('Machines');
 
 sub execute {
   my ($self, $opt, $args) = @_;
@@ -39,23 +40,39 @@ sub _start {
 
 sub dhcp_monitor_packet {
   my ($kernel,$heap,$packet) = @_[KERNEL,HEAP,ARG0];
-  foreach my $key (@{$packet->{options_order}}) {
-    say "Got " . $REV_BOOTP_CODES{ $packet->op() };
-    if($REV_DHO_CODES{$key} eq 'DHO_HOST_NAME') {
-      my $upd = {
-        ip => $packet->ciaddr(),
-        mac_address => substr( $packet->chaddr(), 0, 2 * $packet->hlen() ),
-        host_name => $packet->getOptionValue($key),
-        host_class => ""
-      };
+  my $op = $REV_BOOTP_CODES{ $packet->op() };
+  my $mac = substr( $packet->chaddr(), 0, 2 * $packet->hlen() );
+  
+  #say $packet->toString();
+  
+  if($op eq 'BOOTREPLY') {
+    if(my $machine = $machines->find($mac)) {
+      my $ip = $packet->yiaddr();
       
       #simple check for if machine is firewalled
       my $p = Net::Ping->new('syn');
-      $upd->{is_firewalled} = $p->ping($upd->{ip},0.4) ? 1 : 0;
+      $machine->update({
+        ip => $ip,
+        is_firewalled => !$p->ping($ip,0.4)
+      });
       $p->close;
-      use Data::Dumper;warn Dumper($upd);
-      $schema->resultset('Seen')->update_or_create($upd);
     }
+
+  } elsif ($op eq 'BOOTREQUEST') {
+
+    my $upd = {
+      mac_address => $mac,
+    };
+
+    foreach my $key (@{$packet->{options_order}}) {
+      given ($REV_DHO_CODES{$key}) {
+        $upd->{host_name} = $packet->getOptionValue($key) when 'DHO_HOST_NAME';
+        $upd->{host_class} = $packet->getOptionValue($key) when 'DHO_VENDOR_CLASS_IDENTIFIER';
+      }
+    }
+
+    $machines->update_or_create($upd);
+
   }
   return;
 }
