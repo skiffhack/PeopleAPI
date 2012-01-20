@@ -16,14 +16,14 @@ my $machines = $schema->resultset('Machines');
 sub dispatch_request {
   my $self = shift;
   sub (GET + /recent) {
-    my @all = $machines->active->all;
+    my @all = $machines->refresh->active->all;
     $self->json_response({json => {
       total => scalar @all, 
       recent => [ map {$_->TO_JSON}  @all ]
     }})
   },
   sub (GET + /all) {
-    my @all = $machines->all;
+    my @all = $machines->refresh->all;
     $self->json_response({json => {
       total => scalar @all, 
       recent => [ map {$_->TO_JSON}  @all ]
@@ -31,7 +31,7 @@ sub dispatch_request {
     
   },
   sub (GET + /count) {
-    $self->json_response({json => { total => $machines->active->count } });
+    $self->json_response({json => { total => $machines->refresh->active->count } });
   }
   
 }

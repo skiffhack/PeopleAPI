@@ -7,7 +7,6 @@ use POE;
 use POE::Component::DHCP::Monitor;
 use Net::DHCP::Packet;
 use Net::DHCP::Constants qw(:DEFAULT :dhcp_hashes :dhcp_other %DHO_FORMATS);
-use Net::Ping;
 use PeopleAPI::Database::Script;
 
 $|=1;
@@ -47,17 +46,8 @@ sub dhcp_monitor_packet {
   
   if($op eq 'BOOTREPLY') {
     if(my $machine = $machines->find($mac)) {
-      my $ip = $packet->yiaddr();
-      
-      #simple check for if machine is firewalled
-      my $p = Net::Ping->new('syn');
-      $machine->update({
-        ip => $ip,
-        is_firewalled => !$p->ping($ip,0.4)
-      });
-      $p->close;
+      $machine->update({ ip => $packet->yiaddr() });
     }
-
   } elsif ($op eq 'BOOTREQUEST') {
 
     my $upd = {
@@ -68,6 +58,7 @@ sub dhcp_monitor_packet {
       given ($REV_DHO_CODES{$key}) {
         $upd->{host_name} = $packet->getOptionValue($key) when 'DHO_HOST_NAME';
         $upd->{host_class} = $packet->getOptionValue($key) when 'DHO_VENDOR_CLASS_IDENTIFIER';
+        $upd->{host_identifier} = $packet->getOptionValue($key) when 'DHO_DHCP_CLIENT_IDENTIFIER';
       }
     }
 
