@@ -7,6 +7,8 @@ use JSON::XS;
 use Plack::Builder;
 use PeopleAPI::Database::Script;
 
+# ABSTRACT: API to list people in the skiff
+
 my $cache = {};
 
 my $script = PeopleAPI::Database::Script->new;
