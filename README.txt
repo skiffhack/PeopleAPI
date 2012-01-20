@@ -1,4 +1,4 @@
 ./bin/pa deploy
 ./bin/pa dhcpdmonitor
 
-plackup lib/PeopleAPI/App/Web.pm
+plackup -Ilib lib/PeopleAPI/App/Web.pm
