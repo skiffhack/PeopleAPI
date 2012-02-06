@@ -1,4 +1,7 @@
+curl -L http://cpanmin.us | perl - --sudo App::cpanminus
+dzil installdeps | cpanm
+
 ./bin/pa deploy
-./bin/pa dhcpdmonitor
+sudo ./bin/pa dhcpdmonitor
 
 plackup -Ilib lib/PeopleAPI/App/Web.pm
