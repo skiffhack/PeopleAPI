@@ -37,6 +37,19 @@ sub dispatch_request {
     }
     return [ 404, [ 'Content-type', 'text/plain' ], [ "Couldn't find IP locally" ] ];
   },
+  sub (GET + /status/* ) {
+    my ($self, $hash ) = @_;
+    if(my $client = $machines->search({ email => $hash})->first) {
+      $self->json_response({json => { 
+        status => JSON::XS::true,
+        seen => $client->last_seen 
+      });
+    } else {
+      $self->json_response({json => { 
+        status => JSON::XS::false,
+      });
+    }
+  },
   sub (GET + /all) {
     my @all = $machines->refresh->all;
     $self->json_response({json => {
@@ -65,7 +78,7 @@ around 'to_psgi_app', sub {
   my $app = $self->$orig(@_);
   builder {
     enable "JSONP", callback_key => 'callback';
-    enable 'CrossOrigin', origins => 'http://skiffprofile.herokuapp.com';
+    enable 'CrossOrigin', origins => 'http://skiffprofile.herokuapp.com', methods => ['PUT'];
     $app;
   };
 };
