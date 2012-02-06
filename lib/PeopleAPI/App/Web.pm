@@ -32,7 +32,7 @@ sub dispatch_request {
     if(my $client = $machines->search({ ip => $self->req->address }, {
         order_by => {-desc => ['last_seen'] }
       })->first) {
-      $client->update({email => $data->{'email'}});
+      $client->update({email => $data->{'hash'}});
       return [ 200, [ 'Content-type', 'text/plain' ], [ 'Linked' ] ];
     }
     return [ 404, [ 'Content-type', 'text/plain' ], [ "Couldn't find IP locally" ] ];
