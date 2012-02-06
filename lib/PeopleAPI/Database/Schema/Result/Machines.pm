@@ -14,7 +14,7 @@ column 'email' => {
   data_type   => 'varchar',
   size        => 100,
   is_nullable => 1,
-  is_serializable => 0,
+  is_serializable => 1,
 };
 
 column 'ip' => {

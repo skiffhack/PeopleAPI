@@ -77,8 +77,8 @@ around 'to_psgi_app', sub {
   my ($orig,$self) = (shift, shift);
   my $app = $self->$orig(@_);
   builder {
-    enable "JSONP", callback_key => 'callback';
-    enable 'CrossOrigin', origins => 'http://skiffprofile.herokuapp.com', methods => ['PUT'];
+    enable 'CrossOrigin', origins => 'http://skiffprofile.herokuapp.com', headers => ['*'];
+    #enable "JSONP", callback_key => 'callback';
     $app;
   };
 };
