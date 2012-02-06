@@ -7,6 +7,8 @@ use Plack::Builder;
 use PeopleAPI::Database::Script;
 with('PeopleAPI::Role::Request');
 
+# ABSTRACT: API to list people in the skiff
+
 my $cache = {};
 
 my $script = PeopleAPI::Database::Script->new;
