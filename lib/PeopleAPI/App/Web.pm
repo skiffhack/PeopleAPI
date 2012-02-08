@@ -5,6 +5,7 @@ use Web::Simple;
 use JSON::XS;
 use Plack::Builder;
 use PeopleAPI::Database::Script;
+use DateTime;
 with('PeopleAPI::Role::Request');
 
 # ABSTRACT: API to list people in the skiff
@@ -14,6 +15,7 @@ my $cache = {};
 my $script = PeopleAPI::Database::Script->new;
 my $schema = $script->schema->clone;
 my $machines = $schema->resultset('Machines');
+my $considered_new = DateTime::Duration->new( hours => 1 );
 
 sub dispatch_request {
   my $self = shift;
@@ -44,14 +46,18 @@ sub dispatch_request {
   },
   sub (GET + /status/* ) {
     my ($self, $hash ) = @_;
-    if(my $client = $machines->refresh->active->search({ email => $hash })->first) {
+    warn $hash;
+    if(my $client = $machines->search({ email => $hash })->first) {
       $self->json_response({json => { 
-        status => JSON::XS::true,
-        seen => $client->last_seen->ymd('-')
+        known => JSON::XS::true,
+        present => 
+          $client->last_seen->clone->add_duration($considered_new) > DateTime->now() ?
+          JSON::XS::true : JSON::XS::false,
+        last_seen => $client->last_seen.""
       }});
     } else {
       $self->json_response({json => { 
-        status => JSON::XS::false,
+        known => JSON::XS::false,
       }});
     }
   },
