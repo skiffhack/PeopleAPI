@@ -21,15 +21,20 @@ sub dispatch_request {
     my @all = $machines->refresh->active->all;
     $self->json_response({json => {
       total => scalar @all, 
-      recent => [ map {$_->TO_JSON}  @all ]
+      recent => [ 
+        map { {
+          hash => $_->email,
+          last_seen => $_->last_seen.""
+        } }  @all 
+      ]
     }})
   },
-  sub (PUT + /ident) {
+  sub (PUT | POST + /ident) {
     my $data = decode_json $self->req->content;
     #get the local IP of the request
     #machine should've already broadcast for IP so we should have current
     #mac address
-    if(my $client = $machines->search({ ip => $self->req->address }, {
+    if(my $client = $machines->refresh->search({ ip => $self->req->address }, {
         order_by => {-desc => ['last_seen'] }
       })->first) {
       $client->update({email => $data->{'hash'}});
@@ -39,15 +44,15 @@ sub dispatch_request {
   },
   sub (GET + /status/* ) {
     my ($self, $hash ) = @_;
-    if(my $client = $machines->search({ email => $hash})->first) {
+    if(my $client = $machines->refresh->active->search({ email => $hash })->first) {
       $self->json_response({json => { 
         status => JSON::XS::true,
-        seen => $client->last_seen 
-      });
+        seen => $client->last_seen->ymd('-')
+      }});
     } else {
       $self->json_response({json => { 
         status => JSON::XS::false,
-      });
+      }});
     }
   },
   sub (GET + /all) {
@@ -72,15 +77,5 @@ sub json_response {
       'Content-type' => 'application/json; charset=utf-8',
   ], [ encode_json $json ] ];
 }
-
-around 'to_psgi_app', sub {
-  my ($orig,$self) = (shift, shift);
-  my $app = $self->$orig(@_);
-  builder {
-    enable 'CrossOrigin', origins => 'http://skiffprofile.herokuapp.com', headers => ['*'];
-    #enable "JSONP", callback_key => 'callback';
-    $app;
-  };
-};
 
 __PACKAGE__->run_if_script;

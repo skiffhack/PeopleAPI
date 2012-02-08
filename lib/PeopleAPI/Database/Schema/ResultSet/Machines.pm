@@ -9,6 +9,7 @@ sub active {
   #sqlite doesn't stringify datetime correctly, DBIC fault
   my $dtf = $self->result_source->schema->storage->datetime_parser;
   $self->search_rs({
+    'email' =>  { '!=', undef },
     'last_seen' => 
       { '>=' => $dtf->format_datetime(
           DateTime->now->subtract_duration($considered_new))  }
@@ -29,7 +30,6 @@ sub active {
   }
   
 }
-
 
 sub today {
   my $self = shift;
