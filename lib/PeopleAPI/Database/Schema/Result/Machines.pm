@@ -58,7 +58,7 @@ sub ping {
   my $self = shift;
   if(my $ip = $self->ip) {
     my $p = Net::Ping->new('syn');
-    $self->update({}) if $p->ping($ip,0.4);
+    $self->update({}) if $p->ping($ip,0.2);
     $p->close;
   }
 }

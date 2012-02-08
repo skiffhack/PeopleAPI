@@ -2,7 +2,7 @@ package PeopleAPI::Database::Schema::ResultSet::Machines;
 
 use base qw/DBIx::Class::ResultSet/;
 
-my $considered_new = DateTime::Duration->new( hours => 1 );
+my $considered_new = DateTime::Duration->new( minutes => 5 );
 
 sub active {
   my $self = shift;

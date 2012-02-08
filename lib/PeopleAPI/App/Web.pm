@@ -15,7 +15,7 @@ my $cache = {};
 my $script = PeopleAPI::Database::Script->new;
 my $schema = $script->schema->clone;
 my $machines = $schema->resultset('Machines');
-my $considered_new = DateTime::Duration->new( hours => 1 );
+my $considered_new = DateTime::Duration->new( minutes => 5 );
 
 sub dispatch_request {
   my $self = shift;
@@ -46,7 +46,6 @@ sub dispatch_request {
   },
   sub (GET + /status/* ) {
     my ($self, $hash ) = @_;
-    warn $hash;
     if(my $client = $machines->search({ email => $hash })->first) {
       $self->json_response({json => { 
         known => JSON::XS::true,
