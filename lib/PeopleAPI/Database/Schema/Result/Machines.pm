@@ -54,27 +54,30 @@ column 'last_seen' => {
   is_serializable => 0,
 };
 
-my $opts = [
+my @opts = (
   {icmp => undef},
   {tcp => 548},
   {tcp => 5000},
   {tcp => 8080},
-];
+);
+
+sub do_ping {
+  my $ip = shift;
+  foreach my $opt (@opts) {
+    foreach my $key (keys %$opt) {
+      my ($proto, $port) = ($key ,$opt->{$key});
+      my $p = Net::Ping->new($proto,0.1);
+      $p->port_number($port) if $port;
+      return 1 if $p->ping($ip);
+      $p->close;
+    }
+  }
+  return 0;
+}
 
 sub ping {
   my $self = shift;
-  if(my $ip = $self->ip) {
-    foreach my $opt ($opts) {
-      foreach my $key (keys %$opt) {
-        my ($proto, $port) = ($key ,$opt->{$key});
-        my $p = Net::Ping->new($proto,0.1);
-        $p->port_number($port) if $port;
-        $self->update({}) if $p->ping($ip);
-        $p->close;
-      }
-      
-    }
-  }
+  $self->update({}) if do_ping($self->ip);
 }
 
 around ip => sub {
@@ -82,9 +85,7 @@ around ip => sub {
  
   if (@_) {
     my $ip = $_[0];
-    my $p = Net::Ping->new('syn');
-    $self->is_firewalled($p->ping($ip,0.4) ? 0 : 1);
-    $p->close;
+    $self->is_firewalled(do_ping($ip) ? 0 : 1);
   }
  
   $self->$orig(@_);
