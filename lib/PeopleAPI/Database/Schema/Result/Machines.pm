@@ -57,7 +57,7 @@ column 'last_seen' => {
 sub ping {
   my $self = shift;
   if(my $ip = $self->ip) {
-    my $p = Net::Ping->new('syn');
+    my $p = Net::Ping->new('tcp');
     $self->update({}) if $p->ping($ip,0.2);
     $p->close;
   }
