@@ -54,12 +54,26 @@ column 'last_seen' => {
   is_serializable => 0,
 };
 
+my $opts = [
+  {icmp => undef},
+  {tcp => 548},
+  {tcp => 5000},
+  {tcp => 8080},
+];
+
 sub ping {
   my $self = shift;
   if(my $ip = $self->ip) {
-    my $p = Net::Ping->new('tcp');
-    $self->update({}) if $p->ping($ip,0.2);
-    $p->close;
+    foreach my $opt ($opts) {
+      foreach my $key (keys %$opt) {
+        my ($proto, $port) = ($key ,$opt->{$key});
+        my $p = Net::Ping->new($proto,0.1);
+        $p->port_number($port) if $port;
+        $self->update({}) if $p->ping($ip);
+        $p->close;
+      }
+      
+    }
   }
 }
 
