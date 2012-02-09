@@ -20,7 +20,7 @@ my $considered_new = DateTime::Duration->new( minutes => 5 );
 sub dispatch_request {
   my $self = shift;
   sub (GET + /recent) {
-    my @all = $machines->refresh->active->all;
+    my @all = $machines->with_identifiers->refresh->active->all;
     $self->json_response({json => {
       total => scalar @all, 
       recent => [ 
