@@ -20,7 +20,7 @@ sub active {
   my $updated = time;
   sub refresh {
     my $self = shift;
-    if(time - $updated > 500) {
+    if(time - $updated > 300) {
       foreach my $machine ($self->today->search({ is_firewalled => 0 })->all) {
         $machine->ping();
       }
