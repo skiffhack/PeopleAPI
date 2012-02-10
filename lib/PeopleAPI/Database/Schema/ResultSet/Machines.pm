@@ -17,15 +17,13 @@ sub active {
 
 {
   my $updated = time - 300;
-  my $p = Net::Ping->new("syn",0.2);
+  my $p = Net::Ping->new("syn",0.4);
   sub refresh {
     my $self = shift;
     if(time - $updated > 300) {
       my $tar = {};
       foreach my $machine ($self->today->search({ is_firewalled => 0 })->all) {
         $tar->{$machine->ip} = $machine;
-        warn "pinging " . $machine->ip;
-        
         $p->ping($machine->ip);
       }
 
