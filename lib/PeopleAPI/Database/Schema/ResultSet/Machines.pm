@@ -17,27 +17,31 @@ sub active {
 
 {
   my $updated = time - 300;
-  my $p = Net::Ping->new("syn",0.4);
+  my $p = Net::Ping->new("syn",0.2);
   sub refresh {
     my $self = shift;
     if(time - $updated > 300) {
       my $tar = {};
+        
+      
       foreach my $machine ($self->today->search({ is_firewalled => 0 })->all) {
         $tar->{$machine->ip} = $machine;
-        $p->ping($machine->ip);
       }
-
-      while (($host,$rtt,$ip) = $p->ack) {
-        #warn "HOST: $host [$ip] ACKed in $rtt seconds.\n";
-        my $found = delete $tar->{$host};
-        $found->update({});
+      my $tries = 0;
+      while (keys %$tar) {
+        foreach my $ip (keys %$tar) {
+          $p->ping($ip);
+          while (($host,$rtt) = $p->ack) {
+            my $found = delete $tar->{$host};
+            $found->update({});
+          }
+        }
+        last if $tries++ > 3;
       }
-      use Data::Dumper;warn Dumper(keys %{$tar});
       $updated = time;
     }
     return $self;
   }
-  
 }
 
 sub with_identifiers {
