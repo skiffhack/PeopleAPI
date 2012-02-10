@@ -55,7 +55,7 @@ column 'last_seen' => {
 };
 
 my @opts = (
-  {icmp => undef},
+  {tcp => undef},
   {tcp => 548},
   {tcp => 5000},
   {tcp => 8080},

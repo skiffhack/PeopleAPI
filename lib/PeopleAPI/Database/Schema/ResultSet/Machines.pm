@@ -16,12 +16,22 @@ sub active {
 }
 
 {
-  my $updated = time;
+  my $updated = time - 300;
+  my $p = Net::Ping->new("syn",0.2);
   sub refresh {
     my $self = shift;
     if(time - $updated > 300) {
+      my $tar = {};
       foreach my $machine ($self->today->search({ is_firewalled => 0 })->all) {
-        $machine->ping();
+        $tar->{$machine->ip} = $machine;
+        warn "pinging " . $machine->ip;
+        
+        $p->ping($machine->ip);
+      }
+
+      while (($host,$rtt,$ip) = $p->ack) {
+        warn "HOST: $host [$ip] ACKed in $rtt seconds.\n";
+        $tar->{$host}->update({});
       }
       $updated = time;
     }
