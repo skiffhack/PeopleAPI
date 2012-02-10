@@ -64,7 +64,13 @@ sub dispatch_request {
     my @all = $machines->refresh->all;
     $self->json_response({json => {
       total => scalar @all, 
-      recent => [ map {$_->TO_JSON}  @all ]
+      recent => [ map {
+        {
+          last_seen => $_->last_seen . "",
+          %{$_->TO_JSON}
+        }
+        
+        }  @all ]
     }})
     
   },
