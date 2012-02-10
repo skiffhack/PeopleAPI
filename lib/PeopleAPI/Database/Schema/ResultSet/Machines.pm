@@ -28,9 +28,11 @@ sub active {
       }
 
       while (($host,$rtt,$ip) = $p->ack) {
-        warn "HOST: $host [$ip] ACKed in $rtt seconds.\n";
-        $tar->{$host}->update({});
+        #warn "HOST: $host [$ip] ACKed in $rtt seconds.\n";
+        my $found = delete $tar->{$host};
+        $found->update({});
       }
+      use Data::Dumper;warn Dumper(keys %{$tar});
       $updated = time;
     }
     return $self;
